@@ -1,0 +1,323 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>Arduino + Node.js + Socket.io Demo</title>
+
+  <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <!-- <link href="bootstrap-3.3.7-dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="bootstrap-3.3.7-dist/css/bootstrap-theme.min.css" rel="stylesheet" /> -->
+  <!-- <script type="text/javascript" src="js/jquery.min.js"></script> -->
+  <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+  <script type="text/javascript" src="js/jquery.flow.js"></script>
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+  <!-- <script type="text/javascript" src="bootstrap-3.3.7-dist/js/bootstrap.js"></script> -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <style type="text/css">
+  body {
+    font-family: sans-serif;
+    font-size: 16px;
+    margin: 50px;
+    max-width: 1000px;
+  }
+  .button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- <div class="row">
+      <div class="col-xs-6" align="left">
+        <p style="font-size:1.5em;" id="status">Status : #DISARMED</p>
+      </div>
+    </div> -->
+    <div class="row" style="margin-bottom:1%;">
+      <div class="col-xs-3  ">
+        <div class="input-group">
+          <input type="text" id="nodeID" class="form-control input-lg" placeholder="Enter nodeID">
+          <span class="input-group-btn">
+            <button class="btn btn-lg btn-primary" id="connectBTN" type="button" onclick="connectNode()">Connect</button>
+          </span>
+        </div><!-- /input-group -->
+      </div>
+      <div class="col-xs-1" >
+        <button class="btn btn-lg btn-info" id="arm" onclick="armming()">Arm</button>
+      </div>
+      <div class="col-xs-3">
+        <div class="input-group">
+          <input type="text" id="interval" maxlength="8" class="form-control input-lg" placeholder="Enter interval(us)" value="2500">
+          <span class="input-group-btn">
+            <button class="btn btn-lg btn-primary" id="setInterval" type="button" onclick="setInterval()">Interval(us)</button>
+          </span>
+        </div>
+      </div>
+      <div class="col-xs-3">
+        <div class="input-group">
+          <input type="text" id="samples" maxlength="3" class="form-control input-lg" placeholder="Enter samples" value="500">
+          <span class="input-group-btn">
+            <button class="btn btn-lg btn-primary" id="setSample" type="button" onclick="setSamples()">#Samples</button>
+          </span>
+        </div>
+      </div>
+      <!-- <div class="col-xs-1" align="left">
+        <p style="margin-top:15px;" id="status">#DISARMED</p>
+      </div> -->
+      <div class="col-xs-1 " align="right">
+        <button class="btn btn-lg btn-warning" onclick="downloadCSV('allData')">Save CSV</button>
+      </div>
+    </div><!-- /.row -->
+    <div class="row">
+      <div class="col-xs-10">
+        <h2>Power(mW)</h2>
+      </div>
+      <!-- <div class="col-xs-2" style="margin-top:25px;" align="right">
+        <button class="btn btn-warning" onclick="downloadCSV('power')">DownloadCSV</button>
+      </div> -->
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <div id="monitorPower" style="width:100%;height:300px;"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-10">
+        <h2>Current(mA)</h2>
+      </div>
+      <!-- <div class="col-xs-2" style="margin-top:25px;" align="right">
+        <button  class="btn btn-warning" onclick="downloadCSV('current')">DownloadCSV</button>
+      </div> -->
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <div id="monitorCurrent" style="width:100%;height:300px;"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-xs-10">
+        <h2>Voltage(mV)</h2>
+      </div>
+      <!-- <div class="col-xs-2" style="margin-top:25px;" align="right">
+        <button class="btn btn-warning" onclick="downloadCSV('voltage')">DownloadCSV</button>
+      </div> -->
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <div id="monitorVoltage" style="width:100%;height:300px;"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-10">
+        <h2>Time mointor</h2>
+      </div>
+      <!-- <div class="col-xs-2" style="margin-top:25px;" align="right">
+        <button class="btn btn-warning" onclick="downloadCSV('power')">DownloadCSV</button>
+      </div> -->
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <div id="monitorTime" style="width:100%;height:450px;"></div>
+      </div>
+    </div>
+  </div>
+  <!-- <h1>ESP8266 + Node.js + Socket.io</h1> -->
+
+  <script type="text/javascript">
+  var allData = [];
+  var isConnect = false;
+  var isArm = false;
+  var timeMax = 0;
+  var number = /^[0-9]*$/;
+   var MAX_POINTS = 1000;
+   var socket = io.connect("/", {
+    "reconnect" : true,
+    "reconnection delay" : 500,
+    "max reconnection attempts" : 10
+   });
+   var csvContent = "data:text/csv;charset=utf-8,ct,st,mA,mV,mW,us\n";
+  !function() {
+    var $monitorCurrent = $("#monitorCurrent");
+    var pointsCurrent = [];
+    var $monitorVoltage = $("#monitorVoltage");
+    var pointsVoltage = [];
+    var $monitorPower = $("#monitorPower");
+    var pointsPower = [];
+    var $monitorTime = $("#monitorTime");
+    var pointsTime = [];
+    var point_cnt = 0;
+
+
+    var optionsA = {
+      series: {
+        lines: { fill: true }
+      },
+      yaxis: {
+        min: 0,
+        max: 200
+      }
+    };
+
+    var optionsV = {
+      series: {
+        lines: { fill: true }
+      },
+      yaxis: {
+        min: 1000,
+        max: 3500
+      }
+    };
+    var optionsW = {
+      series: {
+        lines: { fill: true }
+      },
+      yaxis: {
+        min: 0,
+        max: 200
+      }
+    };
+    var optionsT = {
+      series: {
+        lines: { fill: true }
+      },
+      yaxis: {
+        min: 0,
+        max: 5000
+      }
+    };
+     socket.on("connect", function(data) {
+    	socket.emit("message", "Connected - " + (new Date()).toString());
+     });
+
+     socket.on("message", function(data) {
+      //  console.log(data.split(',')[2]);
+/*
+	var arr = [];
+	if( points.length >= MAX_POINTS ) {
+           points.shift(); // Remove first item
+        }
+	points.push(data);
+
+	for(var i=0; i < points.length; i++) {
+           arr.push([i, points[i]]);
+	}
+	$.plot($monitor, [arr], options);
+*/
+      // console.log(JSON.parse(data).ct);
+        if( pointsCurrent.length >= MAX_POINTS ) {
+           pointsCurrent.shift(); // Remove first item
+        }
+        if( pointsVoltage.length >= MAX_POINTS ) {
+           pointsVoltage.shift(); // Remove first item
+        }
+        if( pointsPower.length >= MAX_POINTS ) {
+           pointsPower.shift(); // Remove first item
+        }
+        allData.push(JSON.parse(data));
+        // console.log(data);
+        // currentData.push(JSON.p)
+        pointsCurrent.push( [point_cnt++,JSON.parse(data).mA] );
+        pointsVoltage.push( [point_cnt++,JSON.parse(data).mV] );
+        pointsPower.push( [point_cnt++,JSON.parse(data).mW] );
+        pointsTime.push( [point_cnt++,JSON.parse(data).us] );
+        if(timeMax < JSON.parse(data).us){
+          timeMax = JSON.parse(data).us;
+        }
+        if ( point_cnt % 5 == 0 ) {
+          $.plot($monitorCurrent, [pointsCurrent], optionsA);
+          $.plot($monitorVoltage, [pointsVoltage], optionsV);
+          $.plot($monitorPower, [pointsPower], optionsW);
+          $.plot($monitorTime, [pointsTime], optionsT);
+        }
+      });
+
+      socket.on("status", function(data){
+        // document.getElementById('status').innerHTML = "Status : "+data;
+        if(data === "#ARMED"){
+          // console.log(timeMax);
+          document.getElementById('arm').innerHTML = "Disarm";
+          document.getElementById('arm').className = "btn btn-lg btn-danger";
+          // document.getElementById('arm').style.backgroundColor = '#f44336';
+        }else if(data === "#DISARMED"){
+          document.getElementById('arm').innerHTML = "Arm";
+          document.getElementById('arm').className = "btn btn-lg btn-info";
+          // document.getElementById('arm').style.backgroundColor = '#4CAF50';
+        }else if(data === "#READY"){
+          // document.getElementById('status').innerHTML = "Status : "+data;
+          console.log(timeMax);
+        }else if(data === "#CONNECTED"){
+          document.getElementById('connectBTN').innerHTML = "Connected";
+          document.getElementById('connectBTN').className = "btn btn-lg btn-success";
+        }
+        // console.log(data);
+      });
+
+      socket.on("error", function (data) {
+        alert(data);
+      });
+
+      $.plot($monitorCurrent, [], optionsA);
+      $.plot($monitorVoltage, [], optionsV);
+      $.plot($monitorPower, [], optionsW);
+        $.plot($monitorTime, [], optionsT);
+    }();
+
+    // button function
+    function armming(){
+      if(isArm){
+        socket.emit("cmd", "DISARM");
+        isArm = false;
+      }else{
+        socket.emit("cmd", "ARM");
+        isArm = true;
+      }
+    }
+
+    function connectNode(){
+      if(number.test(document.getElementById('nodeID').value)){
+        socket.emit("cmd", "check,"+document.getElementById('nodeID').value);
+      }
+    }
+
+    function setInterval(){
+      if(number.test(document.getElementById('interval').value)){
+        console.log(document.getElementById('interval').value);
+        socket.emit("cmd", "SET,time,"+document.getElementById('interval').value);
+      }
+    }
+
+    function setSamples(){
+      if(number.test(document.getElementById('samples').value)){
+        socket.emit("cmd", "SET,count,"+document.getElementById('samples').value);
+      }
+    }
+
+    function downloadCSV(type){
+      if(allData.length > 0){
+        allData.forEach(function(infoArray, index){
+          csvContent += infoArray.ct+','+infoArray.st+','+infoArray.mA+','+infoArray.mV+','+infoArray.mW+','+infoArray.us+'\n';
+        });
+        console.log(csvContent);
+        var encodedUri = encodeURI(csvContent);
+        window.open(encodedUri);
+      }else{
+        alert("ไม่มีข้อมูล");
+      }
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="utf-8" name="viewport" content="width=device-width" />
+    <title>
+        Socket.io
+    </title>
+    <!-- Socket.io import the module I have in the project -->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+    <script src="https://www.amcharts.com/lib/3/serial.js"></script>
+    <script src="https://www.amcharts.com/lib/3/plugins/export/export.min.js"></script>
+    <link rel="stylesheet" href="https://www.amcharts.com/lib/3/plugins/export/export.css" type="text/css" media="all" />
+    <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
+
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+</head>
+<body>
+    <style type="text/css">
+        /* basic positioning */
+        .legend { list-style: none;}
+        .legend li { float: left; margin-right: 30px; }
+        .legend span { border: 1px solid #ccc; float: left; width: 15px; height: 15px; margin: 1.5px; }
+        /* your colors */
+        .legend .stateV1 { background-color: #D98880; }
+        .legend .stateV2 { background-color: #C39BD3; }
+        .legend .stateV3 { background-color: #85C1E9; }
+        .legend .stateV4 { background-color: #7DCEA0; }
+        .legend .stateV5 { background-color: #F8C471; }
+
+        .legend .stateC1 { background-color: #2F353D; }
+        .legend .stateC2 { background-color: #016F73; }
+        .legend .stateC3 { background-color: #03A389; }
+        .legend .stateC4 { background-color: #D6CBA3; }
+        .legend .stateC5 { background-color: #8A5006; }
+
+        .legend .stateP1 { background-color: #614862; }
+        .legend .stateP2 { background-color: #D17B81; }
+        .legend .stateP3 { background-color: #B2BB86; }
+        .legend .stateP4 { background-color: #DBCAB0; }
+        .legend .stateP5 { background-color: #3E3835; }
+    </style>
+
+    <div class="container" >
+    <!--  'll have the div where the graph. I tell it that the width of the
+         screen is 100% and the height is 400px -->
+        <br><br>
+        <div class="wrapper" style="text-align: center;">
+            <button type="button" class="btn btn-danger" onclick="generateData()">Start</button> &nbsp;&nbsp;
+            <button type="button" class="btn btn-primary" onclick="clearData()">Reset</button>
+        </div>
+        <div id="chartdivV" style="width:auto; height:200px; margin: 0 auto !important"></div>
+
+        <ul class="legend" >
+            <li><span class="stateV1"></span> State 1 </li>
+            <li><span class="stateV2"></span> State 2 </li>
+            <li><span class="stateV3"></span> State 3 </li>
+            <li><span class="stateV4"></span> State 4 </li>
+            <li><span class="stateV5"></span> State 5 </li>
+        </ul><br><br>
+
+        <div id="chartdivC" style="wwidth:auto; height:200px; margin: 0 auto !important;"></div>
+
+        <ul class="legend" >
+            <li><span class="stateC1"></span> State 1 </li>
+            <li><span class="stateC2"></span> State 2 </li>
+            <li><span class="stateC3"></span> State 3 </li>
+            <li><span class="stateC4"></span> State 4 </li>
+            <li><span class="stateC5"></span> State 5 </li>
+        </ul><br><br>
+
+        <div id="chartdivP" style="width:100%; height:200px;"></div>
+
+        <ul class="legend" >
+            <li><span class="stateP1"></span> State 1 </li>
+            <li><span class="stateP2"></span> State 2 </li>
+            <li><span class="stateP3"></span> State 3 </li>
+            <li><span class="stateP4"></span> State 4 </li>
+            <li><span class="stateP5"></span> State 5 </li>
+        </ul><br><br>
+
+
+    <!-- Javascript Begins -->
+
+        <button type="button" class="btn btn-info" onclick="saveData()">Download</button>
+
+    <script>
+    // I create a WebSocket . Put the IP of your Raspberry Pi!
+    var socket = io.connect('http://172.19.200.205:8000');
+    var chartDataV = [];
+    var chartDataC = [];
+    var chartDataP = [];
+
+    var Events = [['Count','Voltage(mV)','Current(mA)','Power(mW)']];
+
+    var chartV = AmCharts.makeChart("chartdivV", {
+        "type": "serial",
+        "theme": "light",
+        "marginRight": 80,
+        "autoMarginOffset": 20,
+        "dataProvider": chartDataV,
+        "balloon": {
+            "cornerRadius": 6,
+            "horizontalPadding": 15,
+            "verticalPadding": 10
+        },
+        "valueAxes": [{
+            "axisAlpha": 0,
+            "dashLength": 1,
+            "title": "Voltage (mV)",
+            "position": "left"
+        }],
+        "graphs": [{
+            // "bullet": "round",
+            // "bulletBorderAlpha": 1,
+            // "bulletBorderThickness": 1,
+            "lineThickness" : 2.5,
+            "fillAlphas": 0.3,
+            "fillColorsField": "lineColor",
+            "legendValueText": "[[value]]",
+            "lineColorField": "lineColor",
+            "title": "voltage",
+            "valueField": "volt"
+        }],
+        "chartScrollbar": {
+            "autoGridCount": true,
+            "graph": "g1",
+            "scrollbarHeight": 25,
+            "usePeriod":"DD"
+        },
+        "chartCursor": {
+
+            "cursorAlpha": 0,
+            "fullWidth": true
+        },
+
+        "categoryField": "count",
+        "categoryAxis": {
+            // "minPeriod": "ss",
+            // "parseDates": true,
+
+            "axisColor": "#555555",
+
+            "dashLength": 1,
+            "minorGridEnabled": true
+        },
+        "export": {
+            "enabled": true
+        }
+    });
+
+    var chartC = AmCharts.makeChart("chartdivC", {
+        "type": "serial",
+        "theme": "light",
+        "marginRight": 80,
+        "autoMarginOffset": 20,
+        "dataProvider": chartDataC,
+        "balloon": {
+            "cornerRadius": 6,
+            "horizontalPadding": 15,
+            "verticalPadding": 10
+        },
+        "valueAxes": [{
+            "axisAlpha": 0,
+            "dashLength": 1,
+            "title": "Current (mA)",
+            "position": "left"
+        }],
+        "graphs": [{
+            // "bullet": "round",
+            // "bulletBorderAlpha": 1,
+            // "bulletBorderThickness": 1,
+            "lineThickness" : 2.5,
+            "fillAlphas": 0.3,
+            "fillColorsField": "lineColor",
+            "legendValueText": "[[value]]",
+            "lineColorField": "lineColor",
+            "title": "current",
+            "valueField": "curr"
+        }],
+        "chartScrollbar": {
+            "autoGridCount": true,
+            "graph": "g1",
+            "scrollbarHeight": 25,
+            "usePeriod":"DD"
+        },
+        "chartCursor": {
+
+            "cursorAlpha": 0,
+            "fullWidth": true
+        },
+
+        "categoryField": "count",
+        "categoryAxis": {
+            // "minPeriod": "ss",
+            // "parseDates": true,
+
+            "axisColor": "#555555",
+
+            "dashLength": 1,
+            "minorGridEnabled": true
+        },
+        "export": {
+            "enabled": true
+        }
+    });
+
+    var chartP = AmCharts.makeChart("chartdivP", {
+        "type": "serial",
+        "theme": "light",
+        "marginRight": 80,
+        "autoMarginOffset": 20,
+        "dataProvider": chartDataP,
+        "balloon": {
+            "cornerRadius": 6,
+            "horizontalPadding": 15,
+            "verticalPadding": 10
+        },
+        "valueAxes": [{
+            "axisAlpha": 0,
+            "dashLength": 1,
+            "title": "Power (mW)",
+            "position": "left"
+        }],
+        "graphs": [{
+            // "bullet": "round",
+            // "bulletBorderAlpha": 1,
+            // "bulletBorderThickness": 1,
+            "lineThickness" : 2.5,
+            "fillAlphas": 0.3,
+            "fillColorsField": "lineColor",
+            "legendValueText": "[[value]]",
+            "lineColorField": "lineColor",
+            "title": "power",
+            "valueField": "pow"
+        }],
+        "chartScrollbar": {
+            "autoGridCount": true,
+            "graph": "g1",
+            "scrollbarHeight": 25,
+            "usePeriod":"DD"
+        },
+        "chartCursor": {
+
+            "cursorAlpha": 0,
+            "fullWidth": true
+        },
+
+        "categoryField": "count",
+        "categoryAxis": {
+            // "minPeriod": "ss",
+            // "parseDates": true,
+
+            "axisColor": "#555555",
+
+            "dashLength": 1,
+            "minorGridEnabled": true
+        },
+        "export": {
+            "enabled": true
+        }
+    });
+
+
+    var  generateData = function(){
+       console.log("start");
+       socket.emit('btStateStart', 'start');
+       socket.on('btStateStart', function(data){
+        // console.log(data);
+        chartDataV.splice(0, chartDataV.length);
+        chartDataC.splice(0, chartDataC.length);
+        chartDataP.splice(0, chartDataP.length);
+
+        data.forEach(function(item){
+            count = item[0];
+            state = item[1]
+            c = item[2];
+            v = item[3];
+            p = item[4];
+            // state = item[4];
+
+            if (state == "1"){
+                colorV = "#D98880";
+                colorC = "#2F353D";
+                colorP = "#614862";
+            }else if (state == "2") {
+                colorV = "#C39BD3";
+                colorC = "#016F73";
+                colorP = "#D17B81";
+            }else if (state == "3") {
+                colorV = "#85C1E9";
+                colorC = "#03A389";
+                colorP = "#B2BB86";
+            }else if (state == "4") {
+                colorV = "#7DCEA0";
+                colorC = "#D6CBA3";
+                colorP = "#DBCAB0";
+            }else if (state == "5") {
+                colorV = "#F8C471"
+                colorC = "#8A5006";
+                colorP = "#3E3835";
+            }
+
+            var voltage = {
+            "count": count,
+            "volt" : v,
+            "lineColor" : colorV
+            };
+
+            var current = {
+            "count": count,
+            "curr" : c,
+            "lineColor" : colorC
+            };
+
+            var power = {
+            "count": count,
+            "pow" : p,
+            "lineColor" : colorP
+            };
+
+            chartDataV.push(voltage);
+            chartDataC.push(current);
+            chartDataP.push(power);
+
+            chartV.dataProvider = chartDataV;
+            chartV.validateData();
+
+            chartC.dataProvider = chartDataC;
+            chartC.validateData();
+
+            chartP.dataProvider = chartDataP;
+            chartP.validateData();
+
+            event = [count,v,c,p]
+
+
+            Events.push(event);
+        });
+        // console.log(chartData);
+
+       });
+    };
+
+    chartV.addListener("dataUpdated", zoomChartV);
+
+    function zoomChartV() {
+    chartV.zoomToIndexes(chartDataV.length - 50, chartDataV.length - 1);
+    }
+
+    chartC.addListener("dataUpdated", zoomChartC);
+
+    function zoomChartC() {
+    chartC.zoomToIndexes(chartDataC.length - 50, chartDataC.length - 1);
+    }
+
+    chartP.addListener("dataUpdated", zoomChartP);
+
+    function zoomChartP() {
+    chartP.zoomToIndexes(chartDataP.length - 50, chartDataP.length - 1);
+    }
+
+    var clearData = function() {
+        chartDataV.splice(0, chartDataV.length);
+        chartV.dataProvider = chartDataV;
+        chartV.validateData();
+
+        chartDataC.splice(0, chartDataC.length);
+        chartC.dataProvider = chartDataC;
+        chartC.validateData();
+
+        chartDataP.splice(0, chartDataP.length);
+        chartP.dataProvider = chartDataP;
+        chartP.validateData();
+
+    }
+
+
+    var csvRows = [];
+    var saveData = function () {
+
+        for(var i=0, l=Events.length; i<l; ++i){       // http://jsfiddle.net/nkm2b/222/
+            csvRows.push(Events[i].join(','));
+        }
+
+        var csvString = csvRows.join("%0A");
+        var a         = document.createElement('a');
+        a.href        = 'data:attachment/csv,' + csvString;
+        a.target      = '_blank';
+        a.download    = 'myFile.csv';
+
+        document.body.appendChild(a);
+        a.click();
+
+    };
+
+    </script>
+    </div>
+</body>
+</html>
