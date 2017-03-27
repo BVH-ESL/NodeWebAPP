@@ -115,7 +115,14 @@ int pubState = -1;
 int sleepState = 2;
 char sbuf[32];
 int32_t currentSum = 0;
+int32_t currentMax = 0;
+int32_t currentMin = 500;
 int32_t voltageSum = 0;
+int32_t voltageMax = 0;
+int32_t voltageMin = 5000;
+int32_t voltageShunt = 0;
+int32_t voltageShuntMax = 0;
+int32_t voltageShuntMin = 500;
 int count = 0;
 int countTest = 0;
 int loopTest = 10;
@@ -161,28 +168,65 @@ void setup() {
 void loop(){
   // if(digitalRead(enablePin) && countTest < loopTest){
     static unsigned long samplingTime = millis();
-    if (millis() - samplingTime >= 5) {
-      voltageSum += INA219_getBusVoltage();
-      currentSum += INA219_getCurrent() / 100;
-      samplingTime += 5;
-      count++;
+    if(count == 0){
+      Serial.print("\n---------------------------------------------\n");
+      Serial.print("Bus voltage\tShunt voltage\tSense Current\n");
     }
-    if (count == 10) {
+    if (millis() - samplingTime >= 2) {
+      int32_t value = 0;
+      value = INA219_getBusVoltage();
+      voltageSum += value;
+      voltageMax = _max(value, voltageMax);
+      voltageMin = _min(value, voltageMin);
+      value = INA219_getCurrent() / 100;
+      currentSum += value;
+      currentMax = _max(value, currentMax);
+      currentMin = _min(value, currentMin);
+      value = INA219_getShuntVoltage()/10;
+      voltageShunt += value;
+      voltageShuntMax = _max(value, voltageShuntMax);
+      voltageShuntMin = _min(value, voltageShuntMin);
+      count = (count+1)%100;
+      samplingTime += 2;
+      sprintf( sbuf, " %4dmV,\t", voltageSum );
+      Serial.print(sbuf);
+      sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(voltageShunt/100), (int16_t)(abs(voltageShunt)%100) );
+      Serial.print( sbuf );
+      sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(currentSum / 10), (int16_t)(abs(currentSum) % 10) );
+      Serial.println(sbuf);
+    }
+    if(count == 99){
       currentSum /= count;
       voltageSum /= count;
-      sprintf( sbuf, "%3d.%d,", (int16_t)(currentSum / 10), (int16_t)(abs(currentSum) % 10) );
+      voltageShunt /= count;
+      Serial.print("\n---------------------------------------------\n");
+      Serial.print("Bus voltage\tShunt voltage\tSense Current\n");
+      sprintf( sbuf, " %4dmV,\t", voltageSum );
       Serial.print(sbuf);
-      sprintf( sbuf, "%4d, \n", voltageSum );
+      sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(voltageShunt/100), (int16_t)(abs(voltageShunt)%100) );
+      Serial.print( sbuf );
+      sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(currentSum / 10), (int16_t)(abs(currentSum) % 10) );
       Serial.print(sbuf);
+      Serial.println("AVG");
+
+      sprintf( sbuf, " %4dmV,\t", voltageMin );
+      Serial.print(sbuf);
+      sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(voltageShuntMin/100), (int16_t)(abs(voltageShuntMin)%100) );
+      Serial.print( sbuf );
+      sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(currentMin / 10), (int16_t)(abs(currentMin) % 10) );
+      Serial.print(sbuf);
+      Serial.println("MIN");
+
+      sprintf( sbuf, " %4dmV,\t", voltageMax );
+      Serial.print(sbuf);
+      sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(voltageShuntMax/100), (int16_t)(abs(voltageShuntMax)%100) );
+      Serial.print( sbuf );
+      sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(currentMax / 10), (int16_t)(abs(currentMax) % 10) );
+      Serial.print(sbuf);
+      Serial.println("MAX");
       voltageSum = 0;
       currentSum = 0;
-      count = 0;
+      delay(30000);
+      // timer1_disable()
     }
-  // }else{
-  //   if(countTest >= loopTest){
-  //     // detachInterrupt(mainProcessPin);
-  //     // detachInterrupt(pubProcessPin);
-  //   }
-  //   // digitalWrite(doneLED, HIGH);
-  // }
 }

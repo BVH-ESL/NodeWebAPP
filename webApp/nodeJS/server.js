@@ -150,7 +150,7 @@ io.sockets.on("connection", function (socket) {
 });
 
 var mqtt = require('mqtt');
-var client  = mqtt.connect('mqtt://192.168.1.6');
+var client  = mqtt.connect('mqtt://192.168.1.100');
 
 client.on('connect', function () {
   console.log("MQTT Connect");

@@ -1,0 +1,30 @@
+--------------sumary result-----------------
+Bus voltage	Shunt voltage	Sense Current
+  936mV,	   5.06 mV	  50.0mA,	AVG
+    0mV,	   3.87 mV	  38.5mA,	MIN
+ 3128mV,	   5.12 mV	  51.0mA,	MAX
+
+--------------sumary result-----------------
+Bus voltage	Shunt voltage	Sense Current
+  909mV,	  10.05 mV	 100.5mA,	AVG
+    0mV,	   7.77 mV	  77.4mA,	MIN
+ 3288mV,	  10.26 mV	 102.3mA,	MAX
+
+--------------sumary result-----------------
+Bus voltage	Shunt voltage	Sense Current
+  964mV,	  15.18 mV	 151.4mA,	AVG
+    0mV,	  11.72 mV	 122.2mA,	MIN
+ 3340mV,	  15.43 mV	 153.8mA,	MAX
+
+--------------sumary result-----------------
+Bus voltage	Shunt voltage	Sense Current
+  957mV,	  20.24 mV	 201.5mA,	AVG
+    0mV,	  15.60 mV	 165.8mA,	MIN
+ 3332mV,	  20.50 mV	 204.3mA,	MAX
+
+--------------sumary result-----------------
+Bus voltage	Shunt voltage	Sense Current
+  854mV,	  25.26 mV	 249.4mA,	AVG
+    0mV,	  19.82 mV	 196.2mA,	MIN
+ 3284mV,	  25.52 mV	 254.2mA,	MAX
+

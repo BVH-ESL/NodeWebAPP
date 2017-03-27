@@ -114,9 +114,9 @@ int32_t INA219_getPower() { // Load Power = Current * Bus Voltage
 // const char *pass =	"1qaz@WSX";		//
 // IPAddress server(192, 168, 1, 101);
 
-const char *ssid =	"khanchuea";		// cannot be longer than 32 characters!
+const char *ssid =	"DrayTek";		// cannot be longer than 32 characters!
 const char *pass =	"1qaz2wsx";		//
-IPAddress server(192, 168, 1, 6);
+IPAddress server(192, 168, 1, 100);
 
 WiFiClient wclient;
 PubSubClient client(wclient, server);
@@ -127,8 +127,8 @@ PubSubClient client(wclient, server);
 #define MAX_INTERVAL_USEC   (50000UL)
 
 // max data is 2250 data
-#define NUM_BLOCKS             (8)
-#define NUM_BLOCK_DATA_UNITS   (250)
+#define NUM_BLOCKS             (5)
+#define NUM_BLOCK_DATA_UNITS   (20)
 #define NUM_DATA_UNITS_TOTAL   (NUM_BLOCKS * NUM_BLOCK_DATA_UNITS)
 #define MAX_NUM_SAMPLES NUM_DATA_UNITS_TOTAL
 
@@ -279,7 +279,7 @@ void readINAData(){
     data_unit_t *p;
     p = buf[samples/NUM_BLOCK_DATA_UNITS][samples%NUM_BLOCK_DATA_UNITS];
     p->cnt     = (uint16_t)samples;
-    p->state   = (uint8_t)random(0,5);
+    p->state   = (uint8_t)samples/20;
     p->volt    = (int16_t)random(4500,5500);
     p->current = (int16_t)random(0,500);
     p->ts      = (uint16_t)random(2500,3500);
@@ -307,7 +307,7 @@ void publishData() {
      sprintf( publishBuf, "{\"ct\":%d,\"st\":%d,\"mA\":%d.%d,\"mV\":%d,\"mW\":%d.%d,\"us\":%lu}",
                        p->cnt, p->state, currentI, currentF, p->volt, powerI, powerF, p->ts );
      client.publish(oTopic,publishBuf);
-    //  delay(5);
+     delay(5);
   }
   // for (int i=0; i < (NUM_SAMPLES); i++) {
   //    client.publish(oTopic,buf[i/NUM_BLOCK_MESSAGES][i%NUM_BLOCK_MESSAGES]);
