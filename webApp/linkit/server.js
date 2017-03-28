@@ -8,13 +8,18 @@
 var fs  = require("fs");
 var url = require("url");
 var SerialPort  = require("serialport").SerialPort;
-// var SerialPort = require('serialport');
 var http = require("http").createServer(handle);
+var jsonfile = require('jsonfile');
 
-var portName = "/dev/ttyUSB0";
+var data_count = 0;
+var data_buf = [];
+var data_recording = false;
+
+var portName = "/dev/ttyS0";
 var root = "web";
+var webUser = "";
 
-var buf = []; // global data buffer
+var nodeID = 2;
 
 function handle(req, res) {
   var request = url.parse(req.url, false);
@@ -62,7 +67,7 @@ console.log( "server started on localhost:8000" );
 var io = require("socket.io").listen(http);
 
 var ser = new SerialPort(portName, {
-  baudrate: 921600
+  baudrate: 500000
 }); // instantiate the serial port.
 
 ser.on("close", function (err) {
@@ -71,48 +76,98 @@ ser.on("close", function (err) {
 
 ser.on("error", function (err) {
   console.error("error", err);
-  // console.log("didi");
 });
 
 ser.on("open", function () {
-  console.log("didi");
   console.log("port opened...");
 });
 
 io.sockets.on("connection", function (socket) {
     console.log('connected...');
-    // ser.write('ARM\n');
-    // console.log();
-    // If socket.io receives message from the client browser then
-    // this call back will be executed.
     socket.on("message", function (msg) {
-        console.log('message: ' + msg);
-        ser.write('ARM\n');
+        if(webUser === ""){
+          webUser = socket.id;
+        }else{
+          io.to(socket.id).emit("error", "มี User ใช้งาน Sensor Node นี้อยู่ \n ขออภัยในความไม่สะดวก");
+        }
     });
     // If a web browser disconnects from Socket.IO then this callback is called.
     socket.on("disconnect", function () {
         console.log("disconnected");
-        ser.write('DISARM\n');
+        if(webUser != ""){
+          webUser = "";
+        }
     });
-});
+    socket.on("cmd", function(msg){
+      console.log(msg);
+      if(socket.id === webUser){
+        ser.write(msg+'\n');
+      }else{
+        io.to(socket.id).emit("error", "มี User ใช้งาน Sensor Node นี้อยู่ \n ขออภัยในความไม่สะดวก");
+      }
+    });
+  });
 
 ser.on("data", function(data) { // call back when data is received
     data = data.toString().trim();
-    //console.log("serial port: " + data);
-
+    // console.log("serial port: " + data);
     if ( data[0] === '#' ) {
-       console.log( '> ' + data );
-       if ( data === '#END' ) {
-          buf.forEach( function(item) { // send data to the web client via socket.io
-             var fields = item.split(','); // split input string into fields
-             io.sockets.emit("message", fields[1] ); // send fields[1] only (for demo)
-          });
-          buf = [];
-       }
+      if(webUser != ""){
+          console.log("serial port: " + data);
+         io.to(webUser).emit("status", data);
+         if ( data === '#START' ) {
+            data_recording = true;
+            data_buf = [];
+            data_count = 0;
+         } else if ( data === '#END' ) {
+            console.log( 'count: ' + data_count );
+            data_recording = false;
+            save_jsonfile( 'data.json', data_buf );
+            emitData( data_buf );
+         } else if ( data === '#READY' ) {
+            // emitData( data_buf );
+         }
+     }
+   }else{
+    if ( data_recording ) {
+       fields = data.split(',');
+       var ct = parseInt(fields[0]);
+       var mV = parseInt(fields[1]);
+       var mA = parseFloat(fields[2]);
+       var st = parseInt(fields[3]);
+       var us = parseInt(fields[4]);
+       data_buf.push( {
+         'ct':ct,
+         'mV':mV,
+         'mA':parseFloat(mA.toFixed(1)),
+         'mW':parseFloat(((mV*mA)/1000).toFixed(1)),
+         'st':st,
+         'us':us
+        } );
+       data_count++;
     }
-    else {
-       buf.push( data );  // save data to buffer
-    }
+  }
 });
+
+function save_jsonfile( filename, data ) {
+    jsonfile.writeFile( filename, data, {spaces:1}, function(err){
+       if (err != null) {
+          console.error(err);
+          return;
+       }
+       console.log('saved data to JSON file done..' );
+    });
+    console.log( data[0] ); // show the first data
+    console.log( data[data.length-1] ); // show the last data
+    //setTimeout( function(){ process.exit(); }, 1000 );
+}
+
+function emitData( data ) {
+  // console.log( data[0] ); // show the first data
+  // console.log( data[data.length-1] ); // show the last data
+    data.forEach( function(item) {
+       io.to(webUser).emit("message", item );
+    });
+}
 
 //////////////////////////////////////////////////////////////////////

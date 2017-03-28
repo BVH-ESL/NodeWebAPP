@@ -7,14 +7,11 @@
 
 var fs  = require("fs");
 var url = require("url");
-// var SerialPort  = require("serialport").SerialPort;
 var http = require("http").createServer(handle);
 
 // var portName = "/dev/ttyS0";
 var root = "web";
-
 var buf = []; // global data buffer
-
 var listUser = [];
 
 function handle(req, res) {
@@ -71,10 +68,6 @@ io.sockets.on("connection", function (socket) {
           nodeID: 0,
           isConnect: false
       });
-      // listUser.key2 = 0;
-      console.log('message: ' + msg);
-      console.log(listUser);
-
     });
 
     // If a web browser disconnects from Socket.IO then this callback is called.
@@ -132,7 +125,7 @@ io.sockets.on("connection", function (socket) {
             break;
           }
         }
-      }else{
+      }else if(msg.split(',')[0] === "ARM" || msg.split(',')[0] === "DISARM"){
         // check arm and disarm
         for(var i in listUser){
           if(listUser[i].socketID === socket.id){

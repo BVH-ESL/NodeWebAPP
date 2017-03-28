@@ -122,7 +122,6 @@ WiFiClient wclient;
 PubSubClient client(wclient, server);
 
 #define LINE_BUF_SIZE    (32)
-#define extInterrupt     (0)      //D2
 #define MIN_INTERVAL_USEC   (2500UL)
 #define MAX_INTERVAL_USEC   (50000UL)
 
@@ -151,12 +150,12 @@ char iTopic[32];
 char oTopic[32];
 
 // define GPIO variable
-#define scl              (5)                      // D1 pin
-#define sda              (4)                       // D2 pin
-#define ledR             (13)                       // D7
-#define ledG             (15)                       // D8
-#define getProcessPin   (12)           // D6 pin
-#define rstPin           (14)                   // D5 pin
+#define scl              (5)                     // D1 pin
+#define sda              (4)                     // D2 pin
+#define ledR             (15)                    // D7
+#define ledG             (13)                    // D8
+#define extInterrupt     (12)                    // D6
+#define rstPin           (14)                    // D5 pin
 
 #define NUM_STATES (5)
 uint8_t states = 0;

@@ -11,7 +11,7 @@ var SerialPort  = require("serialport").SerialPort;
 // var SerialPort = require('serialport');
 var http = require("http").createServer(handle);
 
-var portName = "/dev/ttyUSB0";
+var portName = "/dev/ttyS0";
 var root = "web";
 
 var buf = []; // global data buffer
@@ -62,7 +62,7 @@ console.log( "server started on localhost:8000" );
 var io = require("socket.io").listen(http);
 
 var ser = new SerialPort(portName, {
-  baudrate: 921600
+  baudrate: 500000
 }); // instantiate the serial port.
 
 ser.on("close", function (err) {
@@ -98,7 +98,7 @@ io.sockets.on("connection", function (socket) {
 
 ser.on("data", function(data) { // call back when data is received
     data = data.toString().trim();
-    //console.log("serial port: " + data);
+    console.log("serial port: " + data);
 
     if ( data[0] === '#' ) {
        console.log( '> ' + data );

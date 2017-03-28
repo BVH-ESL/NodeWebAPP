@@ -3,80 +3,611 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <title>Arduino + Node.js + Socket.io Demo</title>
-	
-  <script type="text/javascript" src="js/jquery.min.js"></script>
-  <script type="text/javascript" src="js/jquery.flow.js"></script>
+
   <script src="/socket.io/socket.io.js"></script>
-	
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://www.amcharts.com/lib/3/amcharts.js"></script>
+  <script src="https://www.amcharts.com/lib/3/serial.js"></script>
+  <script src="https://www.amcharts.com/lib/3/plugins/export/export.min.js"></script>
+  <link rel="stylesheet" href="https://www.amcharts.com/lib/3/plugins/export/export.css" type="text/css" media="all" />
+  <script src="https://www.amcharts.com/lib/3/themes/light.js"></script>
+
+
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
   <style type="text/css">
-  body {
-    font-family: sans-serif;
-    font-size: 16px;
-    margin: 50px;
-    max-width: 1000px;
-  }
+    body {
+      font-family: sans-serif;
+      font-size: 16px;
+      margin: 50px;
+      max-width: 1000px;
+    }
+    .button {
+      background-color: #4CAF50; /* Green */
+      border: none;
+      color: white;
+      padding: 15px 32px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+    }
+    .legend { list-style: none;}
+    .legend li { float: left; margin-right: 30px; }
+    .legend span { border: 1px solid #ccc; float: left; width: 15px; height: 15px; margin: 1.5px; }
+    /* your colors */
+    .legend .stateV1 { background-color: #D98880; }
+    .legend .stateV2 { background-color: #C39BD3; }
+    .legend .stateV3 { background-color: #85C1E9; }
+    .legend .stateV4 { background-color: #7DCEA0; }
+    .legend .stateV5 { background-color: #F8C471; }
+    .legend .stateV6 { background-color: #D6CBA3; }
+
+    .legend .state1 { background-color: #D98880; }
+    .legend .state2 { background-color: #C39BD3; }
+    .legend .state3 { background-color: #7DCEA0; }
+    .legend .state4 { background-color: #F8C471; }
+    .legend .state5 { background-color: #85C1E9; }
+    /*.legend .state6 { background-color: #D6CBA3; }*/
+
+    .legend .stateC1 { background-color: #2F353D; }
+    .legend .stateC2 { background-color: #016F73; }
+    .legend .stateC3 { background-color: #03A389; }
+    .legend .stateC4 { background-color: #D6CBA3; }
+    .legend .stateC5 { background-color: #8A5006; }
+    .legend .stateC6 { background-color: #D17B81; }
+
+    .legend .stateP1 { background-color: #614862; }
+    .legend .stateP2 { background-color: #D17B81; }
+    .legend .stateP3 { background-color: #B2BB86; }
+    .legend .stateP4 { background-color: #3E3835; }
+    .legend .stateP5 { background-color: #DBCAB0; }
+    .legend .stateP6 { background-color: #016F73; }
   </style>
 </head>
 <body>
-  <h1>Arduino + Node.js + Socket.io</h1>
-
-  <div id="monitor" style="width:1000px;height:450px;"></div>
-
+  <div class="container">
+    <div class="row" style="margin-bottom:1%;">
+      <!-- <div class="col-xs-3  ">
+        <div class="input-group">
+          <input type="text" id="nodeID" class="form-control" placeholder="Enter nodeID">
+          <span class="input-group-btn">
+            <button class="btn btn-primary" id="connectBTN" type="button" onclick="connectNode()">Connect</button>
+          </span>
+        </div>
+      </div> -->
+      <div class="col-xs-1" >
+        <button class="btn  btn-info" id="arm" onclick="armming()">Arm</button>
+      </div>
+      <div class="col-xs-3">
+        <div class="input-group">
+          <input type="text" id="interval" maxlength="8" class="form-control" placeholder="Enter interval(us)" value="2500">
+          <span class="input-group-btn">
+            <button class="btn btn-primary" id="setInterval" type="button" onclick="setTime()">Interval(us)</button>
+          </span>
+        </div>
+      </div>
+      <div class="col-xs-3">
+        <div class="input-group">
+          <input type="text" id="samples" maxlength="4" class="form-control" placeholder="Enter samples" value="500">
+          <span class="input-group-btn">
+            <button class="btn btn-primary" id="setSample" type="button" onclick="setSamples()">#Samples</button>
+          </span>
+        </div>
+      </div>
+      <div class="col-xs-1 " align="right">
+        <button class="btn btn-warning" onclick="downloadCSV('allData')">Save CSV</button>
+      </div>
+    </div><!-- /.row -->
+    <div class="row">
+      <div class="col-xs-12" style="margin-top:10px;">
+        <ul class="legend" >
+            <li><span class="state1"></span> State 1 </li>
+            <li><span class="state2"></span> State 2 </li>
+            <li><span class="state3"></span> State 3 </li>
+            <li><span class="state4"></span> State 4 </li>
+            <li><span class="state5"></span> State 5 </li>
+        </ul>
+      </div>
+    </div>
+    <div class="row" style="margin-top:-5px;">
+      <div class="col-xs-10">
+        <h3>Power(mW)</h3>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <div id="chartdivP" style="width:100%; height:200px; margin: 0 auto ;"></div>
+      </div>
+    </div>
+    <!-- <div class="row">
+      <div class="col-xs-10"> -->
+        <h3>Current(mA)</h3>
+      <!-- </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12"> -->
+        <div id="chartdivC" style="width:100%; height:200px; margin: 0 auto !important;"></div>
+      <!-- </div>
+    </div> -->
+    <div class="row">
+      <div class="col-xs-10">
+        <h3>Voltage(mV)</h3>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <div id="chartdivV" style="width:100%; height:200px; margin: 0 auto !important;"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-4">
+        <h3>Timer(us)</h3>
+      </div>
+      <div class="col-xs-6" style="margin-top:10px;">
+        <p id="displayTime"></p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-xs-12">
+        <div id="chartdivT" style="width:100%; height:400px; margin: 0 auto !important;"></div>
+      </div>
+    </div>
+  </div>
   <script type="text/javascript">
+  var chartDataV = [];
+  var chartDataC = [];
+  var chartDataP = [];
+  var chartDataT = [];
 
-   var MAX_POINTS = 500;
+  var Events = [['Count','Voltage(mV)','Current(mA)','Power(mW)']];
 
-   !function() {
-     var $monitor = $("#monitor");
-     var points = [];
-     var point_cnt = 0;
+  var chartV = AmCharts.makeChart("chartdivV", {
+      "type": "serial",
+      "theme": "light",
+      "marginRight": 80,
+      "autoMarginOffset": 20,
+      "dataProvider": chartDataV,
+      "balloon": {
+          "cornerRadius": 6,
+          "horizontalPadding": 15,
+          "verticalPadding": 10
+      },
+      "valueAxes": [{
+          "axisAlpha": 0,
+          "dashLength": 1,
+          "title": "Voltage (mV)",
+          "position": "left"
+      }],
+      "graphs": [{
+          // "bullet": "round",
+          // "bulletBorderAlpha": 1,
+          // "bulletBorderThickness": 1,
+          "lineThickness" : 2.5,
+          "fillAlphas": 0.3,
+          "fillColorsField": "lineColor",
+          "legendValueText": "[[value]]",
+          "lineColorField": "lineColor",
+          "title": "voltage",
+          "valueField": "volt"
+      }],
+      "chartScrollbar": {
+          "autoGridCount": true,
+          "graph": "g1",
+          "scrollbarHeight": 25,
+          "usePeriod":"DD"
+      },
+      "chartCursor": {
 
-     var options = {
-	series: {
-	  lines: { fill: true }
-	},
-	yaxis: {
-	  min: 0,
-          max: 1100
-	}
-     };
-     var socket = io.connect("/", {
-	"reconnect" : true,
-	"reconnection delay" : 500,
-	"max reconnection attempts" : 10
-     });
-			
+          "cursorAlpha": 0,
+          "fullWidth": true
+      },
+
+      "categoryField": "count",
+      "categoryAxis": {
+          // "minPeriod": "ss",
+          // "parseDates": true,
+
+          "axisColor": "#555555",
+
+          "dashLength": 1,
+          "minorGridEnabled": true
+      },
+      "export": {
+          "enabled": true
+      }
+  });
+  var chartC = AmCharts.makeChart("chartdivC", {
+      "type": "serial",
+      "theme": "light",
+      "marginRight": 80,
+      "autoMarginOffset": 20,
+      "dataProvider": chartDataC,
+      "balloon": {
+          "cornerRadius": 6,
+          "horizontalPadding": 15,
+          "verticalPadding": 10
+      },
+      "valueAxes": [{
+          "axisAlpha": 0,
+          "dashLength": 1,
+          "title": "Current (mA)",
+          "position": "left"
+      }],
+      "graphs": [{
+          // "bullet": "round",
+          // "bulletBorderAlpha": 1,
+          // "bulletBorderThickness": 1,
+          "lineThickness" : 2.5,
+          "fillAlphas": 0.3,
+          "fillColorsField": "lineColor",
+          "legendValueText": "[[value]]",
+          "lineColorField": "lineColor",
+          "title": "current",
+          "valueField": "curr"
+      }],
+      "chartScrollbar": {
+          "autoGridCount": true,
+          "graph": "g1",
+          "scrollbarHeight": 25,
+          "usePeriod":"DD"
+      },
+      "chartCursor": {
+
+          "cursorAlpha": 0,
+          "fullWidth": true
+      },
+
+      "categoryField": "count",
+      "categoryAxis": {
+          // "minPeriod": "ss",
+          // "parseDates": true,
+
+          "axisColor": "#555555",
+
+          "dashLength": 1,
+          "minorGridEnabled": true
+      },
+      "export": {
+          "enabled": true
+      }
+  });
+  var chartP = AmCharts.makeChart("chartdivP", {
+      "type": "serial",
+      "theme": "light",
+      "marginRight": 80,
+      "autoMarginOffset": 20,
+      "dataProvider": chartDataP,
+      "balloon": {
+          "cornerRadius": 6,
+          "horizontalPadding": 15,
+          "verticalPadding": 10
+      },
+      "valueAxes": [{
+          "axisAlpha": 0,
+          "dashLength": 1,
+          "title": "Power (mW)",
+          "position": "left"
+      }],
+      "graphs": [{
+          // "bullet": "round",
+          // "bulletBorderAlpha": 1,
+          // "bulletBorderThickness": 1,
+          "lineThickness" : 2.5,
+          "fillAlphas": 0.3,
+          "fillColorsField": "lineColor",
+          "legendValueText": "[[value]]",
+          "lineColorField": "lineColor",
+          "title": "power",
+          "valueField": "pow"
+      }],
+      "chartScrollbar": {
+          "autoGridCount": true,
+          "graph": "g1",
+          "scrollbarHeight": 25,
+          "usePeriod":"DD"
+      },
+      "chartCursor": {
+
+          "cursorAlpha": 0,
+          "fullWidth": true
+      },
+
+      "categoryField": "count",
+      "categoryAxis": {
+          // "minPeriod": "ss",
+          // "parseDates": true,
+
+          "axisColor": "#555555",
+
+          "dashLength": 1,
+          "minorGridEnabled": true
+      },
+      "export": {
+          "enabled": true
+      }
+  });
+  var chartT = AmCharts.makeChart("chartdivT", {
+      "type": "serial",
+      "theme": "light",
+      "columnWidth": 1,
+      "dataProvider": chartDataT,
+      "graphs": [{
+        "lineThickness" : 2.5,
+        "fillAlphas": 0.3,
+        "fillColorsField": "lineColor",
+        "legendValueText": "[[value]]",
+        "lineColorField": "lineColor",
+        "type": "column",
+        "valueField": "time"
+      }],
+      "chartScrollbar": {
+          "autoGridCount": true,
+          "graph": "g1",
+          "scrollbarHeight": 25,
+          "usePeriod":"DD"
+      },
+      "chartCursor": {
+
+          "cursorAlpha": 0,
+          "fullWidth": true
+      },
+      "categoryField": "count",
+      "categoryAxis": {
+        "startOnAxis": true,
+        "title": ""
+      },
+      "valueAxes": [{
+        "title": "Time (us)"
+      }],
+      "export": {
+          "enabled": true
+      }
+    });
+
+    chartV.addListener("dataUpdated", zoomChartV);
+   function zoomChartV() {
+     chartV.zoomToIndexes(chartDataV.length - 50, chartDataV.length - 1);
+   }
+   chartC.addListener("dataUpdated", zoomChartC);
+   function zoomChartC() {
+     chartC.zoomToIndexes(chartDataC.length - 50, chartDataC.length - 1);
+   }
+   chartP.addListener("dataUpdated", zoomChartP);
+   function zoomChartP() {
+     chartP.zoomToIndexes(chartDataP.length - 50, chartDataP.length - 1);
+   }
+   chartT.addListener("dataUpdated", zoomChartT);
+   function zoomChartT() {
+     chartT.zoomToIndexes(chartDataT.length - 50, chartDataT.length - 1);
+   }
+
+
+
+
+  var clearData = function() {
+      chartDataV.splice(0, chartDataV.length);
+      chartV.dataProvider = chartDataV;
+      chartV.validateData();
+
+      chartDataC.splice(0, chartDataC.length);
+      chartC.dataProvider = chartDataC;
+      chartC.validateData();
+
+      chartDataP.splice(0, chartDataP.length);
+      chartP.dataProvider = chartDataP;
+      chartP.validateData();
+
+      chartDataT.splice(0, chartDataT.length);
+      chartT.dataProvider = chartDataT;
+      chartT.validateData();
+  }
+
+  var allData = [];
+  var isConnect = false;
+  var isArm = false;
+  var timeMax = 0;
+  var timeMin = 1000000;
+  var number = /^[0-9]*$/;
+  var MAX_POINTS = 1000;
+
+  var socket = io.connect("/", {
+  "reconnect" : true,
+  "reconnection delay" : 500,
+  "max reconnection attempts" : 10
+  });
+
+   var csvContent = "data:text/csv;charset=utf-8,ct,st,mA,mV,mW,us\n";
+
+  !function() {
+
      socket.on("connect", function(data) {
-	socket.emit("message", "Connected - " + (new Date()).toString());
+    	socket.emit("message", "Connected - " + (new Date()).toString());
      });
-			
-     socket.on("message", function(data) {
-/*
-	var arr = [];
-	if( points.length >= MAX_POINTS ) {
-           points.shift(); // Remove first item
-        }
-	points.push(data);
-	
-	for(var i=0; i < points.length; i++) {
-           arr.push([i, points[i]]);
-	} 
-	$.plot($monitor, [arr], options);
-*/
 
-        if( points.length >= MAX_POINTS ) {
-           points.shift(); // Remove first item
+     socket.on("message", function(data) {
+      //  console.log(datas.us);
+        // var data = JSON.parse(datas);
+        // console.log(datas);
+        // console.log(data);
+       allData.push(data);
+        if (data.st == 0){
+            colorV = "#D98880";
+        }else if (data.st == 1) {
+            colorV = "#C39BD3";
+        }else if (data.st == 2) {
+            colorV = "#7DCEA0";
+        }else if (data.st == 3) {
+            colorV = "#F8C471";
+        }else if (data.st == 4) {
+            colorV = "#85C1E9"
         }
-        points.push( [point_cnt++,data] );
-        if ( point_cnt % 5 == 0 ) {
-          $.plot($monitor, [points], options);
+        // else if (JSON.parse(data).st == 6) {
+        //     colorV = "#D6CBA3"
+        //     colorC = "#D17B81";
+        //     colorP = "#016F73";
+        // }
+
+        var voltage = {
+        "count": data.ct,
+        "volt" : data.mV,
+        "lineColor" : colorV
+        };
+
+        var current = {
+        "count": data.ct,
+        "curr" : data.mA,
+        "lineColor" : colorV
+        };
+
+        var power = {
+        "count": data.ct,
+        "pow" : data.mW,
+        "lineColor" : colorV
+        };
+
+        var time = {
+        "count": data.ct,
+        "time" : data.us,
+        "lineColor" : colorV
+        };
+        if(data.us > timeMax){
+          timeMax = data.us;
         }
+        if(data.us < timeMin){
+          timeMin = data.us;
+        }
+        // console.log(data.us);
+        chartDataV.push(voltage);
+        chartDataC.push(current);
+        chartDataP.push(power);
+        chartDataT.push(time);
+
       });
-			
-      $.plot($monitor, [], options);
+
+      socket.on("status", function(data){
+        // document.getElementById('status').innerHTML = "Status : "+data;
+        if(data === "#ARMED"){
+          // console.log(timeMax);
+          document.getElementById('arm').innerHTML = "Disarm";
+          document.getElementById('arm').className = "btn btn-danger";
+          // document.getElementById('arm').style.backgroundColor = '#f44336';
+        }else if(data === "#DISARMED"){
+          document.getElementById('arm').innerHTML = "Arm";
+          document.getElementById('arm').className = "btn btn-info";
+          // document.getElementById('arm').style.backgroundColor = '#4CAF50';
+        }else if(data === "#READY"){
+          document.getElementById('arm').innerHTML = "Arm";
+          document.getElementById('arm').className = "btn btn-info";
+          document.getElementById('displayTime').innerHTML = "Max time : "+timeMax+"\tMinTime: "+timeMin;
+          isArm = false;
+          // chartDataV.splice(0, chartDataV.length);
+          chartV.dataProvider = chartDataV;
+          chartV.validateData();
+
+          // chartDataC.splice(0, chartDataC.length);
+          chartC.dataProvider = chartDataC;
+          chartC.validateData();
+
+          // chartDataP.splice(0, chartDataP.length);
+          chartP.dataProvider = chartDataP;
+          chartP.validateData();
+
+          // chartDataT.splice(0, chartDataT.length);
+          chartT.dataProvider = chartDataT;
+          chartT.validateData();
+
+          event = [data.ct, data.mV, data.mA, data.mW]
+          Events.push(event);
+          // syncZoom(event);
+          // var charts = [];
+          // charts.push(chartT);
+          // charts.push(chartP);
+          // charts.push(chartV);
+          // charts.push(chartC);
+          //
+          // for (var x in charts) {
+          //   charts[x].addListener("zoomed", syncZoom);
+          // }
+          //
+          // function syncZoom(event) {
+          //   for (x in charts) {
+          //     if (charts[x].ignoreZoom) {
+          //       charts[x].ignoreZoom = false;
+          //     }
+          //     if (event.chart != charts[x]) {
+          //       charts[x].ignoreZoom = true;
+          //       charts[x].zoomToIndexes(charts[x].length - 50, charts[x].length - 1);
+          //     }
+          //   }
+          // }
+        }else if(data === "#CONNECTED"){
+          document.getElementById('connectBTN').innerHTML = "Connected";
+          document.getElementById('connectBTN').className = "btn btn-success";
+        }else if(data === "#START"){
+          chartDataV.splice(0, chartDataV.length);
+          chartDataC.splice(0, chartDataC.length);
+          chartDataP.splice(0, chartDataP.length);
+        }
+        // console.log(data);
+      });
+
+      socket.on("error", function (data) {
+        alert(data);
+      });
 
     }();
+
+    // button function
+    function armming(){
+      if(isArm){
+        socket.emit("cmd", "DISARM");
+        isArm = false;
+      }else{
+        socket.emit("cmd", "ARM");
+        isArm = true;
+      }
+    }
+
+    function connectNode(){
+      if(number.test(document.getElementById('nodeID').value)){
+        socket.emit("cmd", "check,"+document.getElementById('nodeID').value);
+      }
+    }
+
+    function setTime(){
+      if(number.test(document.getElementById('interval').value)){
+        console.log(document.getElementById('interval').value);
+        socket.emit("cmd", "SET,time,"+document.getElementById('interval').value);
+      }
+    }
+
+    function setSamples(){
+      if(number.test(document.getElementById('samples').value)){
+        socket.emit("cmd", "SET,count,"+document.getElementById('samples').value);
+      }
+    }
+
+    function downloadCSV(type){
+      if(allData.length > 0){
+        allData.forEach(function(infoArray, index){
+          csvContent += infoArray.ct+','+infoArray.st+','+infoArray.mA+','+infoArray.mV+','+infoArray.mW+','+infoArray.us+'\n';
+        });
+        console.log(csvContent);
+        var encodedUri = encodeURI(csvContent);
+        window.open(encodedUri);
+      }else{
+        alert("ไม่มีข้อมูล");
+      }
+    }
     </script>
 </body>
 </html>
-
