@@ -163,62 +163,63 @@ void readINA(){
   // detachInterrupt( extInterrupt );
   int32_t value = 0;
   value = INA219_getBusVoltage();
-  voltageSum += value;
-  voltageMax = _max(value, voltageMax);
-  voltageMin = _min(value, voltageMin);
-  // sprintf( sbuf, " %4dmV,\t", value );
-  // Serial.print(sbuf);
-
-  value = INA219_getShuntVoltage()/10;
-  voltageShunt += value;
-  voltageShuntMax = _max(value, voltageShuntMax);
-  voltageShuntMin = _min(value, voltageShuntMin);
-  // sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(value/100), (int16_t)(abs(value)%100) );
-  // Serial.print( sbuf );
-
   value = INA219_getCurrent() / 100;
-  currentSum += value;
-  currentMax = _max(value, currentMax);
-  currentMin = _min(value, currentMin);
+  // voltageSum += value;
+  // voltageMax = _max(value, voltageMax);
+  // voltageMin = _min(value, voltageMin);
+  // // sprintf( sbuf, " %4dmV,\t", value );
+  // // Serial.print(sbuf);
+  //
+  // // value = INA219_getShuntVoltage()/10;
+  // // voltageShunt += value;
+  // // voltageShuntMax = _max(value, voltageShuntMax);
+  // // voltageShuntMin = _min(value, voltageShuntMin);
+  // // sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(value/100), (int16_t)(abs(value)%100) );
+  // // Serial.print( sbuf );
+  //
+  // value = INA219_getCurrent() / 100;
+  // currentSum += value;
+  // currentMax = _max(value, currentMax);
+  // currentMin = _min(value, currentMin);
   // sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(value / 10), (int16_t)(abs(value) % 10) );
   // Serial.println(sbuf);
 
   count = (count+1)%100;
-  if(count == 99){
-    currentSum /= count;
-    voltageSum /= count;
-    voltageShunt /= count;
-    Serial.print("\n--------------sumary result-----------------\n");
-    Serial.print("Bus voltage\tShunt voltage\tSense Current\n");
-    sprintf( sbuf, " %4dmV,\t", voltageSum );
-    Serial.print(sbuf);
-    sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(voltageShunt/100), (int16_t)(abs(voltageShunt)%100) );
-    Serial.print( sbuf );
-    sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(currentSum / 10), (int16_t)(abs(currentSum) % 10) );
-    Serial.print(sbuf);
-    Serial.println("AVG");
-
-    sprintf( sbuf, " %4dmV,\t", voltageMin );
-    Serial.print(sbuf);
-    sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(voltageShuntMin/100), (int16_t)(abs(voltageShuntMin)%100) );
-    Serial.print( sbuf );
-    sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(currentMin / 10), (int16_t)(abs(currentMin) % 10) );
-    Serial.print(sbuf);
-    Serial.println("MIN");
-
-    sprintf( sbuf, " %4dmV,\t", voltageMax );
-    Serial.print(sbuf);
-    sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(voltageShuntMax/100), (int16_t)(abs(voltageShuntMax)%100) );
-    Serial.print( sbuf );
-    sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(currentMax / 10), (int16_t)(abs(currentMax) % 10) );
-    Serial.print(sbuf);
-    Serial.println("MAX");
-    voltageSum = 0;
-    currentSum = 0;
-    timer1_disable();
-    ext_irq_detected = false;
-    // attachInterrupt( extInterrupt, trigger_isr, FALLING );
-  }
+  // if(count == 99){
+  //   currentSum /= count;
+  //   voltageSum /= count;
+  //   voltageShunt /= count;
+  //   Serial.print("\n--------------sumary result-----------------\n");
+  //   Serial.print("Bus voltage\tSense Current\n");
+  //   sprintf( sbuf, " %4dmV,\t", voltageSum );
+  //   Serial.print(sbuf);
+  //   // sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(voltageShunt/100), (int16_t)(abs(voltageShunt)%100) );
+  //   // Serial.print( sbuf );
+  //   sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(currentSum / 10), (int16_t)(abs(currentSum) % 10) );
+  //   Serial.print(sbuf);
+  //   Serial.println("AVG");
+  //
+  //   sprintf( sbuf, " %4dmV,\t", voltageMin );
+  //   Serial.print(sbuf);
+  //   // sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(voltageShuntMin/100), (int16_t)(abs(voltageShuntMin)%100) );
+  //   // Serial.print( sbuf );
+  //   sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(currentMin / 10), (int16_t)(abs(currentMin) % 10) );
+  //   Serial.print(sbuf);
+  //   Serial.println("MIN");
+  //
+  //   sprintf( sbuf, " %4dmV,\t", voltageMax );
+  //   Serial.print(sbuf);
+  //   // sprintf( sbuf, " %3d.%02d mV\t", (int16_t)(voltageShuntMax/100), (int16_t)(abs(voltageShuntMax)%100) );
+  //   // Serial.print( sbuf );
+  //   sprintf( sbuf, " %3d.%dmA,\t", (int16_t)(currentMax / 10), (int16_t)(abs(currentMax) % 10) );
+  //   Serial.print(sbuf);
+  //   Serial.println("MAX");
+  //   voltageSum = 0;
+  //   currentSum = 0;
+  //   // timer1_disable();
+  //   ext_irq_detected = false;
+  //   // attachInterrupt( extInterrupt, trigger_isr, FALLING );
+  // }
 }
 
 // fucntion check btn press
@@ -228,10 +229,6 @@ void trigger_isr( ) {
     // Serial.print("\n-------------start Testing------------------\n");
     // Serial.print("Bus voltage\tShunt voltage\tSense Current\n");
     ext_irq_detected = true;
-    timer1_isr_init();
-    timer1_attachInterrupt(reinterpret_cast<timercallback>(readINA));
-    timer1_enable(TIM_DIV16, TIM_EDGE, 1);    //TIM_DIV16 -> 5MHz = 5 ticks/us, TIM_DIV1 -> 80MHz = 80 ticks/us
-    timer1_write(20000);                       //call interrupt after ... tick
     // int32_t currentSum = 0;
     currentMax = 0;
     currentMin = 5000;
@@ -250,9 +247,13 @@ void setup() {
   // digitalWrite(debugPin, HIGH);
   pinMode(extInterrupt, INPUT_PULLUP);
   Wire.begin(sda, scl); // use I2C port
-  Wire.setClock(400000);
   IN219_config();
-  attachInterrupt( extInterrupt, trigger_isr, FALLING );
+  Wire.setClock(450000);
+  timer1_isr_init();
+  timer1_attachInterrupt(reinterpret_cast<timercallback>(readINA));
+  timer1_enable(TIM_DIV16, TIM_EDGE, 1);    //TIM_DIV16 -> 5MHz = 5 ticks/us, TIM_DIV1 -> 80MHz = 80 ticks/us
+  timer1_write(25000);                       //call interrupt after ... tick
+  // attachInterrupt( extInterrupt, trigger_isr, FALLING );
 }
 
 void loop(){

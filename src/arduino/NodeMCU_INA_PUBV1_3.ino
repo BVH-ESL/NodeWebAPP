@@ -243,14 +243,6 @@ void callback(const MQTT::Publish& pub) {
   }
 }
 
-// fucntion check btn press
-void trigger_isr( ) {
-  if (!ext_irq_detected) {
-    ext_irq_detected = true;
-    states = 0;
-  }
-}
-
 #define NUM_SAMPLES_AVG (4)
 int8_t countSamplesAVG = 0;
 int32_t currentSum = 0;
@@ -314,13 +306,14 @@ void publishData() {
   // }
 }
 
-//
-void getProcess(){
-  states = (states+1)%NUM_STATES;
-}
-
-void resetProcess(){
-  states = 0;
+// fucntion check btn press
+void trigger_isr( ) {
+  if (!ext_irq_detected) {
+    ext_irq_detected = true;
+    states = 0;
+  }else{
+    states = (states+1)%NUM_STATES;
+  }
 }
 
 void setup() {
@@ -434,7 +427,7 @@ void loop() {
        if ( ext_irq_detected ) {
           state = ST_SAMPLING; // go to state ST_SAMPLING
           detachInterrupt( extInterrupt ); // use EINT0 / D3 input pin on 32u4
-          detachInterrupt(rstPin);
+          // detachInterrupt(rstPin);
           attachInterrupt(getProcessPin, getProcess, FALLING);
           // attachInterrupt(rstPin, resetProcess, RISING);
           ext_irq_enabled  = false;

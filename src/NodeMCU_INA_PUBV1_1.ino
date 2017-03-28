@@ -134,10 +134,11 @@ PubSubClient client(wclient, server);
 #define extInterrupt     (0)      //D2
 #define MIN_INTERVAL_USEC   (5000UL)
 #define MAX_INTERVAL_USEC   (50000UL)
+#define NUM_STATES (5)
 // #define NODE_ID          (2)
 
-int NUM_SAMPLES = 100;
-unsigned long INTERVAL_USEC = 50000;
+int NUM_SAMPLES = 1000;
+unsigned long INTERVAL_USEC = 5000;
 int nodeID = 1;
 char iTopic[32];
 char oTopic[32];
@@ -181,7 +182,7 @@ int32_t currentSum = 0;
 int32_t current = 0;
 int32_t voltageSum = 0;
 int32_t voltage = 0;
-int32_t power = 0;
+int32_t powerSum = 0;
 
 // function check command
 void checkCmd(String input){
@@ -250,11 +251,11 @@ void callback(const MQTT::Publish& pub) {
 }
 
 // fucntion check btn press
-void trigger_isr( ) {
-  if (!ext_irq_detected) {
-    ext_irq_detected = true;
-  }
-}
+// void trigger_isr( ) {
+//   if (!ext_irq_detected) {
+//     ext_irq_detected = true;
+//   }
+// }
 
 static unsigned long T1;
 static unsigned long T2;
@@ -284,17 +285,14 @@ void sendData() {
   // client.publish("esl/1/out/data",sbuf);
 }
 
-//
-void getProcess(){
-  states++;
-}
-
-void resetProcess(){
-  states = 0;
-}
-
-void readINA(){
-
+// fucntion check btn press
+void trigger_isr( ) {
+  if (!ext_irq_detected) {
+    ext_irq_detected = true;
+    states = 0;
+  }else{
+    states = (states+1)%NUM_STATES;
+  }
 }
 
 void setup() {
@@ -315,11 +313,11 @@ void setup() {
     // Serial.println("WiFi connected");
   }
 
-  timer1_isr_init();
-  timer1_attachInterrupt(reinterpret_cast<timercallback>(readINA));
-  timer1_enable(TIM_DIV16, TIM_EDGE, 1);    //TIM_DIV16 -> 5MHz = 5 ticks/us, TIM_DIV1 -> 80MHz = 80 ticks/us
-  timer1_write(10000);                       //call interrupt after ... tick
-  
+  // timer1_isr_init();
+  // // timer1_attachInterrupt(reinterpret_cast<timercallback>(readINA));
+  // timer1_enable(TIM_DIV16, TIM_EDGE, 1);    //TIM_DIV16 -> 5MHz = 5 ticks/us, TIM_DIV1 -> 80MHz = 80 ticks/us
+  // timer1_write(10000);                       //call interrupt after ... tick
+
   digitalWrite(ledG, HIGH);
   digitalWrite(ledR, HIGH);
   delay(500);
@@ -376,6 +374,7 @@ void loop() {
            detachInterrupt(getProcessPin);
            detachInterrupt(rstPin);
            attachInterrupt( extInterrupt, trigger_isr, FALLING ); // use EINT0 / D3 input pin on 32u4
+           attachInterrupt(rstPin, trigger_isr, FALLING);
            ext_irq_enabled  = true;
            ext_irq_detected = false;
            delay(5);
@@ -389,8 +388,8 @@ void loop() {
        if ( ext_irq_detected ) {
           state = ST_SAMPLING; // go to state ST_SAMPLING
           detachInterrupt( extInterrupt ); // use EINT0 / D3 input pin on 32u4
-          attachInterrupt(getProcessPin, getProcess, FALLING);
-          attachInterrupt(rstPin, resetProcess, FALLING);
+          // attachInterrupt(getProcessPin, getProcess, FALLING);
+          // attachInterrupt(rstPin, resetProcess, FALLING);
           ext_irq_enabled  = false;
           ext_irq_detected = false;
           samples = 0;
@@ -429,6 +428,7 @@ void loop() {
 
     case ST_READY:
        state = ST_RST;
+       cmd = CMD_NONE;
        delay(5);
       //  Serial.println("ready");
       //  Serial.println("#READY");
